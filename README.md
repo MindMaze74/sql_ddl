@@ -109,3 +109,96 @@ ALTER USER 'sys_test'@'localhost' IDENTIFIED WITH mysql_native_password BY 'pass
 3.2. Выполните запрос на получение списка прав для пользователя sys_temp. (скриншот)
 >![3.2](https://github.com/MindMaze74/sql_ddl/blob/main/img/8.png)
 *Результатом работы должны быть скриншоты обозначенных заданий, а также простыня со всеми запросами.*
+
+### Команды которые использовались при выполнении задания
+
+**Запуск контейнера MySQL 8.0 (Docker)**
+```bash
+docker run --name mysql8 -e MYSQL_ROOT_PASSWORD=rootpass -d -p 3306:3306 mysql:8.0
+```
+
+**Подключение к MySQL внутри контейнера (для выполнения SQL-команд)**
+```bash
+docker exec -it mysql8 mysql -u root -p
+```
+
+**Команды, относящиеся к Заданию 1**
+```bash
+CREATE USER 'sys_temp'@'localhost' IDENTIFIED BY 'password';
+```
+
+ **Список пользователей**
+ ```bash
+SELECT User, Host FROM mysql.user;
+```
+
+**Выдача всех прав**
+ ```bash
+GRANT ALL PRIVILEGES ON *.* TO 'sys_temp'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+**Проверка прав**
+ ```bash
+SHOW GRANTS FOR 'sys_temp'@'localhost';
+```
+**Смена типа аутентификации**
+ ```bash
+ALTER USER 'sys_temp'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+```
+
+**Восстановление дампа Sakila**
+```bash
+wget https://downloads.mysql.com/docs/sakila-db.zip
+unzip sakila-db.zip
+docker cp sakila-db/sakila-schema.sql mysql8:/tmp/
+docker cp sakila-db/sakila-data.sql mysql8:/tmp/
+```
+**Внутри MySQL**
+```bash
+SOURCE /tmp/sakila-schema.sql;
+SOURCE /tmp/sakila-data.sql;
+```
+**Получение списка таблиц базы**
+```bash
+USE sakila;
+SHOW TABLES;
+```
+**Команды для Задания 2 через DBeaver**
+```bash
+SELECT 
+    TABLE_NAME AS 'Название таблицы',
+    GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ') AS 'Название первичного ключа'
+FROM
+    INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE
+    TABLE_SCHEMA = 'sakila'
+    AND CONSTRAINT_NAME = 'PRIMARY'
+GROUP BY TABLE_NAME
+ORDER BY TABLE_NAME;
+```
+
+**Команды для Задания 3**
+```bash
+REVOKE INSERT, UPDATE, DELETE ON sakila.* FROM 'sys_temp'@'localhost';
+FLUSH PRIVILEGES;
+```
+**Проверка прав после отзыва**
+```bash
+SHOW GRANTS FOR 'sys_temp'@'localhost';
+```
+**Запуск DBeaver и настройка подключения**
+```bash
+cd ~/Downloads
+tar -xzf dbeaver-ce-26.1.1-linux-x86_64.tar.gz
+sudo mv dbeaver /opt/
+/opt/dbeaver/dbeaver
+```
+**Настройки подключения в DBeaver:**
+```
+Host: 127.0.0.1
+Port: 3306
+User: root
+Password: rootpass
+Дополнительные свойства: allowPublicKeyRetrieval=true, useSSL=false
+```
